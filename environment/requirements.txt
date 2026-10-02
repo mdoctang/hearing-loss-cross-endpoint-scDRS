@@ -1,0 +1,15 @@
+# Extracted from ENVIRONMENT.md (snapshot 2026-09-30)
+anndata==0.13.4
+h5py==3.16.0
+matplotlib==3.11.2
+numba==0.67.0
+numpy==2.5.3
+pandas==2.3.3
+pytz==2026.4
+scanpy==1.12.4
+scdrs==1.0.2
+scikit-learn==1.9.1
+scipy==1.18.1
+seaborn==0.13.2
+statsmodels==0.15.0
+tqdm==4.70.1
