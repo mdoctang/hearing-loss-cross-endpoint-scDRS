@@ -1,0 +1,6 @@
+# Force LF everywhere: CRLF in .sh files breaks execution on Linux/macOS
+* text=auto eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
