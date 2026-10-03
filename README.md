@@ -1,13 +1,13 @@
 # Analysis code for: cross-endpoint genetic localization of hearing loss in mouse cochlear single-cell atlases
 
-Zhengyi Tang¹, Ting Liao¹, Chengmeng Wei¹, Yibei Jiao¹, Ge Wang¹
+Zhengyi Tang¹, Ting Liao¹, Chengmeng Wei¹, Yipo Jiao¹, Ge Wang¹
 
 ¹ Department of Otorhinolaryngology and Head & Neck Surgery, 923rd Hospital of PLA, Nanning 530021, China
 
 Corresponding author: Zhengyi Tang — doctang@hotmail.com (co-corresponding author: Ge Wang)
 
 This repository contains the code used to produce every number, table and figure
-reported in the accompanying manuscript submitted to *BMC Genomics*. It does not
+reported in the accompanying manuscript submitted to *Human Genetics*. It does not
 contain the input data, which are all publicly available (see [Input data](#input-data)).
 
 ---
