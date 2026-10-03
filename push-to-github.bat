@@ -40,6 +40,17 @@ if errorlevel 1 (
 )
 echo.
 
+REM ---- credential helper: one-time setup ----
+REM "manager" pops a GitHub login window, so no token has to be copied by hand.
+"%GIT%" config --global --get credential.helper >nul 2>&1
+if errorlevel 1 (
+  echo First run: enabling the GitHub login helper.
+  "%GIT%" config --global credential.helper manager
+)
+for /f "delims=" %%H in ('"%GIT%" config --global --get credential.helper') do set "HELPER=%%H"
+echo Credential helper: %HELPER%
+echo.
+
 set "REPO=%~1"
 if "%REPO%"=="" set /p REPO=Repository URL (example: https://github.com/USER/hearing-loss-cross-endpoint-scDRS.git):
 if "%REPO%"=="" (
@@ -69,6 +80,10 @@ if errorlevel 1 (
   echo   3. Repository is private - Zenodo needs it to be PUBLIC
   echo.
   echo If a browser or GitHub login window opened, finish it, then run this file again.
+  echo.
+  echo If NO login window ever appeared, switch to the Windows vault helper:
+  echo   "%GIT%" config --global credential.helper wincred
+  echo then generate a Personal Access Token on github.com and use it as the password.
 ) else (
   echo.
   echo Push succeeded. Open the repository page on github.com to confirm the files are there.
