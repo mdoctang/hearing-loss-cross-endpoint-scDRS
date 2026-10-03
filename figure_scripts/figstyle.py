@@ -103,14 +103,32 @@ def audit_text_overlaps(fig, name, pad=1.0):
 
 
 def save(fig, name):
-    """Save one figure as PNG (400 dpi) and PDF (vector)."""
+    """Save one figure as PNG (400 dpi), PDF (vector) and EPS (vector).
+
+    EPS is added because the journal's Instructions for Authors say, for figure
+    artwork: "For vector graphics, the preferred format is EPS; for halftones,
+    please use TIFF format ... Name your figure files with 'Fig' and the figure
+    number, e.g., Fig1.eps." All four figures here are vector artwork, and the
+    submission interface accepts .eps, so EPS is the format to upload.
+
+    Fonts: `matplotlib.rc("ps", fonttype=42)` above embeds TrueType (Type 42)
+    outlines, which is what the journal requires ("Vector graphics containing
+    fonts must have the fonts embedded in the files").
+
+    The return value stays a 2-tuple on purpose, so no figure script has to
+    change.
+    """
     import os
     audit_text_overlaps(fig, name)
     os.makedirs(OUT_DIR, exist_ok=True)
     png = os.path.join(OUT_DIR, name + ".png")
     pdf = os.path.join(OUT_DIR, name + ".pdf")
+    eps = os.path.join(OUT_DIR, name + ".eps")
     fig.savefig(png, dpi=DPI, bbox_inches="tight", pad_inches=0.02)
     fig.savefig(pdf, dpi=DPI, bbox_inches="tight", pad_inches=0.02)
+    fig.savefig(eps, dpi=DPI, bbox_inches="tight", pad_inches=0.02)
+    print("  [eps] %s  %.2f MB" % (os.path.basename(eps),
+                                   os.path.getsize(eps) / 1048576.0))
     plt.close(fig)
     return png, pdf
 
