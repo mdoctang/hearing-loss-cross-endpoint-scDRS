@@ -109,7 +109,7 @@ axA.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.33), nco
            title="bold: cross-endpoint BH-FDR < 0.05\n"
                  "\u2021: survives prior correction",
            title_fontsize=FS_LEGEND, borderaxespad=0.2, labelspacing=0.3)
-add_panel_label(axA, "A", x=-0.125, y=1.015)
+add_panel_label(axA, "a", x=-0.125, y=1.015)
 
 # ------------------------------ Panel B -----------------------------------
 axB = fig.add_subplot(gs[1, 0])
@@ -151,7 +151,7 @@ axB.legend(handles=[
            ms=5, label="not significant")],
     loc="upper right", fontsize=FS_LEGEND, borderaxespad=0.2)
 axB.tick_params(axis="both", labelsize=FS_TICK)
-add_panel_label(axB, "B", x=-0.125, y=1.015)
+add_panel_label(axB, "b", x=-0.125, y=1.015)
 
 png, pdf = save(fig, "Fig3_celltype_enrichment")
 print("wrote", png)

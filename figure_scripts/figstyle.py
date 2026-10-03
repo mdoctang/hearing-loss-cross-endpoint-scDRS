@@ -60,9 +60,52 @@ OUT_DIR = "C:/Users/docta/WorkBuddy/纯生信/figures"
 DPI = 400
 
 
+def audit_text_overlaps(fig, name, pad=1.0):
+    """Report every pair of overlapping text artists in the rendered figure.
+
+    Runs automatically from `save()`, so a figure can never ship with silently
+    overlapping labels. Tick labels are excluded (the axis machinery owns their
+    spacing); everything else -- panel tags, in-panel summaries, gene/row
+    labels, legends, annotations -- is compared pairwise. Reports only; the
+    per-figure hard gate lives in the figure script itself.
+    """
+    import matplotlib.text as _mtext
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    skip = set()
+    for ax in fig.axes:
+        for t in list(ax.get_xticklabels()) + list(ax.get_yticklabels()):
+            skip.add(id(t))
+    items = []
+    for t in fig.findobj(_mtext.Text):
+        if id(t) in skip or not t.get_text().strip() or not t.get_visible():
+            continue
+        try:
+            bp = t.get_bbox_patch()
+            bb = (bp.get_window_extent(renderer=r) if bp is not None
+                  else t.get_window_extent(renderer=r))
+        except Exception:
+            continue
+        items.append((t.get_text().replace("\n", " ")[:34], bb))
+    bad = []
+    for i in range(len(items)):
+        for j in range(i + 1, len(items)):
+            na, a = items[i]
+            nb, b = items[j]
+            if not (a.x1 + pad < b.x0 or b.x1 + pad < a.x0 or
+                    a.y1 + pad < b.y0 or b.y1 + pad < a.y0):
+                bad.append((na, nb))
+    print("  [overlap audit] %s: %d texts, %d overlapping pair(s)"
+          % (name, len(items), len(bad)))
+    for na, nb in bad:
+        print("      !! %r  <->  %r" % (na, nb))
+    return bad
+
+
 def save(fig, name):
     """Save one figure as PNG (400 dpi) and PDF (vector)."""
     import os
+    audit_text_overlaps(fig, name)
     os.makedirs(OUT_DIR, exist_ok=True)
     png = os.path.join(OUT_DIR, name + ".png")
     pdf = os.path.join(OUT_DIR, name + ".pdf")
@@ -75,6 +118,42 @@ def save(fig, name):
 def add_panel_label(ax, label, x=-0.02, y=1.04):
     ax.text(x, y, label, transform=ax.transAxes, fontsize=10,
             fontweight="bold", va="bottom", ha="right", color=C_DARK)
+
+
+def check_text_collisions(fig, items, pad=1.0, verbose=True):
+    """Assert that no two text boxes in `items` overlap on the rendered canvas.
+
+    `items` is a sequence of (name, Text) pairs; an artist's bbox patch is used
+    when it has one (e.g. a boxed summary), otherwise the text extent itself.
+    Extents are measured in display pixels after a draw, so this catches the
+    real rendered geometry rather than the nominal anchor points.
+
+    Returns the list of colliding (name_a, name_b) pairs; raises AssertionError
+    if any are found, so a figure script fails loudly instead of shipping
+    overlapping labels.
+    """
+    fig.canvas.draw()
+    r = fig.canvas.get_renderer()
+    boxes = []
+    for name, t in items:
+        bp = t.get_bbox_patch()
+        bb = (bp.get_window_extent(renderer=r) if bp is not None
+              else t.get_window_extent(renderer=r))
+        boxes.append((name, bb))
+    bad = []
+    for i in range(len(boxes)):
+        for j in range(i + 1, len(boxes)):
+            na, a = boxes[i]
+            nb, b = boxes[j]
+            if not (a.x1 + pad < b.x0 or b.x1 + pad < a.x0 or
+                    a.y1 + pad < b.y0 or b.y1 + pad < a.y0):
+                bad.append((na, nb))
+    if verbose:
+        print("  text-collision check: %d labels, %d collisions" % (len(boxes), len(bad)))
+        for na, nb in bad:
+            print("    !! OVERLAP: %s  <->  %s" % (na, nb))
+    assert not bad, "overlapping figure text: %r" % (bad,)
+    return bad
 
 
 def despine(ax, keep=("left", "bottom")):

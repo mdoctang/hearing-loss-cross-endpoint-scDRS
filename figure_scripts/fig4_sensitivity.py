@@ -145,16 +145,16 @@ def draw_panel(ax, rows, title, note_row=None):
 axA = fig.add_subplot(gs[0, 0])
 draw_panel(axA, rows_a, "Cell-level re-aggregation")
 axA.set_xlabel("D = q95(CON) $-$ q95(SEN)", fontsize=FSYLABEL)
-add_panel_label(axA, "A", x=-0.155, y=1.04)
+add_panel_label(axA, "a", x=-0.155, y=1.04)
 
 axB = fig.add_subplot(gs[1, 0])
 draw_panel(axB, rows_b, "Gene-set size", note_row=2)
-add_panel_label(axB, "B", x=-0.155, y=1.06)
+add_panel_label(axB, "b", x=-0.155, y=1.06)
 
 axC = fig.add_subplot(gs[2, 0])
 draw_panel(axC, rows_c, "Gene-set construction")
 axC.set_xlabel("D = q95(CON) $-$ q95(SEN)", fontsize=FSYLABEL)
-add_panel_label(axC, "C", x=-0.155, y=1.06)
+add_panel_label(axC, "c", x=-0.155, y=1.06)
 
 fig.legend(handles=[
     Line2D([], [], marker="o", ls="none", mfc=C_DARK, mec=C_DARK, ms=6.5,

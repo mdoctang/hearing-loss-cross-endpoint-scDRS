@@ -99,9 +99,13 @@ axA.legend(handles=[
            label="BH-FDR < 0.05"),
     Line2D([], [], marker="o", ls="none", mfc=C_GREY, mec=C_GREY, ms=6,
            label="BH-FDR \u2265 0.05")],
-    loc="center right", bbox_to_anchor=(1.0, 0.32), fontsize=FS_LEGEND,
+    # Upper right: rows 0-1 carry their q annotations to the LEFT of the
+    # markers, so the right-hand side of the top rows is the only empty region
+    # wide enough for the three-entry legend.  Anchoring it at 0.32 (centre
+    # right) put it on top of the two "q = 0.05194" labels of rows 7-8.
+    loc="upper right", bbox_to_anchor=(1.0, 1.0), fontsize=FS_LEGEND,
     borderaxespad=0.0, handletextpad=0.4)
-add_panel_label(axA, "A", x=-0.245, y=1.02)
+add_panel_label(axA, "a", x=-0.245, y=1.02)
 
 # ------------------------------ Panel B -----------------------------------
 axB = fig.add_subplot(gs[1, 0])
@@ -118,7 +122,9 @@ for r in P:
                 zorder=3)
 axB.axvline(0, color=C_DARK, lw=0.9, zorder=2)
 axB.axhline(len(sig) - 0.5, color=C_DARK, lw=0.8, ls="--", zorder=2)
-axB.text(-3.3, 7.4, "BH-FDR < 0.05 (6 tests above the line)", fontsize=6.8,
+# y = 9.0, not 7.4: at 7.4 this note sat within one text-line of the dashed
+# BH-FDR line (y = 5.5) and the dashes ran through the glyphs.
+axB.text(-3.3, 9.0, "BH-FDR < 0.05 (6 tests above the line)", fontsize=6.8,
          color=C_DARK, ha="left")
 for ct, ea, eb, ty in [("IPhC_IBC", "CON", "SEN", 4.3),
                        ("HC", "CON", "SEN", 15.0)]:
@@ -139,7 +145,7 @@ axB.set_ylabel("Pairwise tests ranked by Monte-Carlo p\n(1 = most significant)",
 axB.set_yticks([1, 10, 20, 30, 40, 50, 60, 70, 84])
 axB.grid(axis="x", ls=":", lw=0.4, color="#EDEDED", zorder=0)
 axB.tick_params(axis="both", labelsize=FS_TICK)
-add_panel_label(axB, "B", x=-0.185, y=1.02)
+add_panel_label(axB, "b", x=-0.185, y=1.02)
 
 png, pdf = save(fig, "Fig2_cross_endpoint")
 print("wrote", png)

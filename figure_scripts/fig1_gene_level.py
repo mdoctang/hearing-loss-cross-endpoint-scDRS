@@ -21,7 +21,11 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from figstyle import (C_SIG, C_DARK, C_MANH_A, C_MANH_B, save, add_panel_label)
+from figstyle import (C_SIG, C_DARK, C_MANH_A, C_MANH_B, save, add_panel_label,
+                      check_text_collisions)
+
+# every text artist that must not overlap another (checked before saving)
+TEXT_ITEMS = []
 
 BASE = "C:/Users/docta/WorkBuddy/纯生信/project/analysis/fuma_output"
 BONF = 2.634352e-06                      # Bonferroni 0.05 / 18,980 genes
@@ -107,15 +111,25 @@ for i, (ep, _) in enumerate(ENDPOINTS):
     top_sym = d["sym"][int(np.argmin(d["p"]))]
     tag = ("%s — %d / %s genes pass Bonferroni" % (ep, n_sig, f"{len(d['p']):,}")
            if n_sig else "%s — no gene passes Bonferroni" % ep)
-    ax.text(0.012, 0.90, tag, transform=ax.transAxes, fontsize=FS_BOX,
-            fontweight="bold", color=C_DARK, va="top",
-            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#CCCCCC",
-                      lw=0.6))
-    ax.text(0.012, 0.68, "min gene P = %.3g (%s)" % (top_p, top_sym),
-            transform=ax.transAxes, fontsize=FS_SMALL, color="#555555",
-            va="top")
+    tag_txt = ax.text(0.012, 0.90, tag, transform=ax.transAxes, fontsize=FS_BOX,
+                      fontweight="bold", color=C_DARK, va="top",
+                      bbox=dict(boxstyle="round,pad=0.3", fc="white",
+                                ec="#CCCCCC", lw=0.6))
+    TEXT_ITEMS.append((ep + " tag box", tag_txt))
+    # The min-P line lives in the top-RIGHT corner, not under the tag box.
+    # Reason (2026-10-03): at 0.68 axes height, left-aligned, it overlapped the
+    # EML6 gene label; the top-right corner of every panel is empty because the
+    # only far-right annotation (NOL12, panel A) is placed below its point.
+    minp_txt = ax.text(0.985, 0.90, "min gene P = %.3g (%s)" % (top_p, top_sym),
+                       transform=ax.transAxes, fontsize=FS_SMALL,
+                       color="#555555", va="top", ha="right")
+    TEXT_ITEMS.append((ep + " minP line", minp_txt))
 
-    BELOW = {"EML6"}
+    # Genes whose label must go BELOW the point.  ARHGEF28 stays above (it is
+    # the single topmost gene); the rest sit under the tag box, so a label
+    # placed above them would land inside the box rectangle
+    # (axes x 0.012-0.484, y 0.718-0.900) and collide with the bold summary.
+    BELOW = {"EML6", "HLA-DQA1", "NOL12"}
     for j, name in enumerate({"SEN": ANNO_SEN, "CON": ANNO_CON,
                               "NOISE": ANNO_NOISE}[ep]):
         idx = np.where(d["sym"] == name)[0]
@@ -128,25 +142,32 @@ for i, (ep, _) in enumerate(ENDPOINTS):
             ha = "right"
             gx = GENOME_LEN * 0.997
         if name in BELOW:
-            ax.annotate(name, xy=(gx, gy), xytext=(gx, gy - 1.2),
-                        fontsize=FS_SMALL, color=C_DARK, ha=ha, va="top",
-                        arrowprops=dict(arrowstyle="-", lw=0.5, color="#888888",
-                                        shrinkA=0, shrinkB=1.5))
+            ann = ax.annotate(name, xy=(gx, gy), xytext=(gx, gy - 1.2),
+                              fontsize=FS_SMALL, color=C_DARK, ha=ha, va="top",
+                              arrowprops=dict(arrowstyle="-", lw=0.5,
+                                              color="#888888", shrinkA=0,
+                                              shrinkB=1.5))
         else:
-            ax.annotate(name, xy=(gx, gy), xytext=(gx, gy + 1.0 + 0.85 * (j % 3)),
-                        fontsize=FS_SMALL, color=C_DARK, ha=ha, va="bottom",
-                        arrowprops=dict(arrowstyle="-", lw=0.5, color="#888888",
-                                        shrinkA=0, shrinkB=1.5))
-    add_panel_label(ax, ["A", "B", "C"][i], x=-0.008, y=1.015)
+            ann = ax.annotate(name, xy=(gx, gy),
+                              xytext=(gx, gy + 1.0 + 0.85 * (j % 3)),
+                              fontsize=FS_SMALL, color=C_DARK, ha=ha,
+                              va="bottom",
+                              arrowprops=dict(arrowstyle="-", lw=0.5,
+                                              color="#888888", shrinkA=0,
+                                              shrinkB=1.5))
+        TEXT_ITEMS.append((ep + " " + name, ann))
+    add_panel_label(ax, ["a", "b", "c"][i], x=-0.008, y=1.015)
 
 axm = panel_axes[-1]
 axm.set_xticks([chr_mid[c] for c in chroms if c % 2 == 1])
 axm.set_xticklabels([str(c) for c in chroms if c % 2 == 1], fontsize=FS_TICK)
 axm.set_xlabel("Chromosome (GRCh37 gene coordinates)", fontsize=FS_LABEL)
 axm.tick_params(axis="x", length=0)
-panel_axes[1].text(0.988, 0.62, "Bonferroni threshold P = 2.63e-6",
-                   transform=panel_axes[1].transAxes, fontsize=FS_SMALL,
-                   color=C_DARK, ha="right", va="bottom")
+thr_txt = panel_axes[1].text(0.988, 0.62, "Bonferroni threshold P = 2.63e-6",
+                             transform=panel_axes[1].transAxes,
+                             fontsize=FS_SMALL, color=C_DARK, ha="right",
+                             va="bottom")
+TEXT_ITEMS.append(("threshold note", thr_txt))
 
 # ---- Panel D: gene-level z distribution ---------------------------------
 axd = fig.add_subplot(gs[3, 0])
@@ -165,11 +186,16 @@ axd.set_xlabel("MAGMA gene-level z statistic", fontsize=FS_LABEL)
 axd.set_ylabel("Density", fontsize=FS_LABEL)
 axd.set_xlim(-6, 8)
 axd.legend(loc="upper left", fontsize=FS_SMALL, frameon=False)
-axd.text(0.99, 0.97, "n = 18,980 genes per endpoint", transform=axd.transAxes,
-         fontsize=FS_SMALL, color="#555555", ha="right", va="top")
+n_txt = axd.text(0.99, 0.97, "n = 18,980 genes per endpoint",
+                 transform=axd.transAxes, fontsize=FS_SMALL, color="#555555",
+                 ha="right", va="top")
+TEXT_ITEMS.append(("panel D n note", n_txt))
 axd.grid(axis="y", ls=":", lw=0.4, color="#EDEDED", zorder=0)
 axd.tick_params(axis="both", labelsize=FS_TICK)
-add_panel_label(axd, "D", x=-0.008, y=1.015)
+add_panel_label(axd, "d", x=-0.008, y=1.015)
+
+# ---- hard gate: no two texts may overlap in the rendered figure ----------
+check_text_collisions(fig, TEXT_ITEMS)
 
 png, pdf = save(fig, "Fig1_gene_level")
 print("wrote", png)
